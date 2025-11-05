@@ -133,7 +133,8 @@
       "private",
       "source-file",
       "target-org",
-      "url-only"
+      "url-only",
+      "write-url-to-file"
     ],
     "plugin": "@salesforce/plugin-org"
   },
