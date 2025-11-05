@@ -32,13 +32,13 @@ export class OrgOpenCommand extends OrgOpenCommandBase<OrgOpenOutput> {
     'api-version': orgApiVersionFlagWithDeprecations,
     private: Flags.boolean({
       summary: messages.getMessage('flags.private.summary'),
-      exclusive: ['url-only', 'browser'],
+      exclusive: ['url-only', 'browser', 'write-url-to-file'],
     }),
     browser: Flags.option({
       char: 'b',
       summary: messages.getMessage('flags.browser.summary'),
       options: ['chrome', 'edge', 'firefox'] as const, // These are ones supported by "open" package
-      exclusive: ['url-only', 'private'],
+      exclusive: ['url-only', 'private', 'write-url-to-file'],
     })(),
     path: Flags.string({
       char: 'p',
@@ -51,6 +51,10 @@ export class OrgOpenCommand extends OrgOpenCommandBase<OrgOpenOutput> {
       summary: messages.getMessage('flags.url-only.summary'),
       aliases: ['urlonly'],
       deprecateAliases: true,
+    }),
+    'write-url-to-file': Flags.string({
+      summary: 'Write the org URL to the specified file path instead of opening it in a browser.',
+      exclusive: ['url-only', 'browser', 'private'],
     }),
     loglevel,
     'source-file': Flags.file({
@@ -67,12 +71,21 @@ export class OrgOpenCommand extends OrgOpenCommandBase<OrgOpenOutput> {
     this.org = flags['target-org'];
     this.connection = this.org.getConnection(flags['api-version']);
 
-    // `org.getMetadataUIURL` already generates a Frontdoor URL
+    let url: string;
     if (flags['source-file']) {
-      return this.openOrgUI(flags, await generateFileUrl(flags['source-file'], this.org));
+      url = await generateFileUrl(flags['source-file'], this.org);
+    } else {
+      url = await this.org.getFrontDoorUrl(flags.path);
     }
 
-    return this.openOrgUI(flags, await this.org.getFrontDoorUrl(flags.path));
+    if (flags['write-url-to-file']) {
+      const fs = await import('node:fs/promises');
+      await fs.writeFile(flags['write-url-to-file'], url, 'utf8');
+      this.logSuccess(`Org URL written to file: ${flags['write-url-to-file']}`);
+      return { orgId: this.org.getOrgId(), url, username: this.org.getUsername() as string };
+    }
+
+    return this.openOrgUI(flags, url);
   }
 }
 

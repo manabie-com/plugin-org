@@ -22,6 +22,31 @@ const messages = Messages.loadMessages('@salesforce/plugin-org', 'open');
 const sharedMessages = Messages.loadMessages('@salesforce/plugin-org', 'messages');
 
 describe('org:open', () => {
+  describe('--write-url-to-file', () => {
+    const testFile = 'test-org-url.txt';
+    afterEach(() => {
+      if (fs.existsSync(testFile)) {
+        fs.unlinkSync(testFile);
+      }
+    });
+
+    it('writes the org URL to a file and does not open browser', async () => {
+      spies.set('resolver', stubMethod($$.SANDBOX, SfdcUrl.prototype, 'checkLightningDomain').resolves('1.1.1.1'));
+      const response = await OrgOpenCommand.run([
+        '--json',
+        '--targetusername',
+        testOrg.username,
+        '--write-url-to-file',
+        testFile,
+      ]);
+      assert(response);
+      testJsonStructure(response);
+      expect(fs.existsSync(testFile)).to.be.true;
+      const fileContent = fs.readFileSync(testFile, 'utf8');
+      expect(fileContent).to.equal(expectedDefaultSingleUseUrl);
+      expect(spies.get('open').callCount).to.equal(0);
+    });
+  });
   const $$ = new TestContext();
   const testOrg = new MockTestOrgData();
 

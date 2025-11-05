@@ -30,6 +30,10 @@ To open in a specific browser, use the --browser flag. Supported browsers are "c
 
   $ <%= config.bin %> <%= command.id %> --url-only --path lightning
 
+- Write the org URL to a file instead of opening the browser:
+
+  $ <%= config.bin %> <%= command.id %> --target-org MyTestOrg1 --write-url-to-file ./org-url.txt
+
 - Open a local Lightning page in your default org's Lightning App Builder:
 
   $ <%= config.bin %> <%= command.id %> --source-file force-app/main/default/flexipages/Hello.flexipage-meta.xml
@@ -61,6 +65,10 @@ Navigation URL path to open a specific page.
 # flags.url-only.summary
 
 Display navigation URL, but don’t launch browser.
+
+# flags.write-url-to-file.summary
+
+Write the org URL to a file instead of opening the browser.
 
 # containerAction
 
